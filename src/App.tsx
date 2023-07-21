@@ -1,13 +1,16 @@
 import React from 'react';
 import './App.css';
+import Quiz from './components/Quiz';
+import ApiProvider from './data/ApiProvider';
+import ErrorBoundary from './ErrorBoundary';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-          What do you Know?
-      </header>
-    </div>
+    <ApiProvider>
+              <ErrorBoundary>
+                <Quiz/>
+              </ErrorBoundary>
+    </ApiProvider>
   );
 }
 

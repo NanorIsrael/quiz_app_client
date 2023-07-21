@@ -20,7 +20,7 @@ interface OptionsType<T>{
     Authorization: string
   }
 
-  export interface MyBlogAPIClient {
+  export interface QuizAPIClient {
     get: <R>(url: string, query?: string, options?: HTTPTOptions) => Promise<RequestResponse<R>>;
     post: <T, R>(url: string, body: T, options?: HTTPTOptions) => Promise<RequestResponse<R>>;
     put: <T, R>(url: string, body: T, options?: HTTPTOptions) => Promise<RequestResponse<R>>;
@@ -102,6 +102,19 @@ export default class Client {
           } ;
     }
 
+    async get<T>(
+        url: string,
+        query?: string,
+        options?: HTTPTOptions
+      ): Promise<RequestResponse<T>> {
+        return this.request({
+          method: "GET",
+          url,
+          query,
+          ...options
+        }) ;
+      }
+
     async post<T, R>(url: string, body: T, options?: HTTPTOptions): Promise<RequestResponse<R>> {
         return this.request({ method: "POST", url, body, ...options });
       }
@@ -112,6 +125,22 @@ export default class Client {
         return this.request({ method: "DELETE", url, ...options });
     }
     
+    async login(username: string, password: string) {
+        const response = await this.post<null, LoginResponse>('/tokens', null, {
+          headers: {
+            'Authorization':  'Basic ' + (btoa(username + ":" + password))
+          }
+        })
+    
+        if (!response.ok) {
+          return response.status === 401 ? 'fail' : 'error';
+        }
+        if (response.body?.access_token) {
+          localStorage.setItem("accessToken",  response.body?.access_token);
+        }
+        return 'ok';
+    }
+
     async logout() {
         await this.delete('/tokens')
         localStorage.removeItem("accessToken");
