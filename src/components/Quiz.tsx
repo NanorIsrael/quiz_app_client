@@ -59,7 +59,7 @@ export default function Quiz() {
 
   const handleOptionChange = (option: string) => {
       console.log(cursor.hasNext)
-      
+    
         setSelectedOption(option);
       
   };
@@ -67,15 +67,17 @@ export default function Quiz() {
     const handleCurrentQuestion = () => {
         if (cursor.hasNext) {
             setQuestionIndex((prev) => prev ? prev + 1 : null);
+            setSelectedOption('');
+
         } else {
-            
+            setSelectedOption('');
         }
     };
 
   return (
     <div className="App">
-      <h1 className="App-header">What do you Know?</h1>
-      <main>
+      <h1 className="App-header py-7 underline">What do you Know?</h1>
+      <main className="App_main py-7">
         {currentQuestion === undefined ? (
           <p>Loading</p>
         ) : currentQuestion === null ? (
@@ -95,7 +97,11 @@ export default function Quiz() {
                 />
               </section>
             )}
-            <button onClick={handleCurrentQuestion}>{cursor.hasNext ? 'Next' : 'Done'}</button>
+            <button
+             onClick={handleCurrentQuestion}
+             disabled={selectedOption === ''}>
+            {cursor.hasNext ? 'Next' : 'Done'}
+            </button>
           </>
         )}
       </main>
