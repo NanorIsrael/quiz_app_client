@@ -3,9 +3,7 @@ import { useUser } from '../data/UserProvider';
 
 export default function Header() {
   const { user, logout } = useUser();
-
-  console.log(user);
-
+  
   return (
     <header className={'w-full flex flex-row justify-between p-4 '}>
       <p className={'text-xl hover:text-blue-600'}>

@@ -4,7 +4,7 @@ import { ReactElement } from 'react';
 
 export default function PublicRoute({ children }: { children: ReactElement }) {
   const { user } = useUser();
-  console.log(user);
+
   if (user === undefined) {
     return null;
   } else if (user) {

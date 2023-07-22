@@ -66,7 +66,6 @@ export default function Quiz({
   }, [api, questionIndex]);
 
   const handleOptionChange = (option: string) => {
-    console.log(cursor.hasNext);
     setSelectedOption(option);
   };
 
@@ -88,7 +87,6 @@ export default function Quiz({
       setSelectedOption('');
 
       if (!cursor.hasNext) {
-        console.log('quizQuestions', quizQuestions);
 
         const response = await api.post<QuizBody, any>('/quiz', {
           quizQuestions,
@@ -98,7 +96,6 @@ export default function Quiz({
         if (response.ok) {
           setSelectedOption('');
           localStorage.setItem('answeredQuestions', '[]');
-          console.log('heoo form', response.body.score);
           setScore(response.body.score as number);
           navigate('/user/score');
         }

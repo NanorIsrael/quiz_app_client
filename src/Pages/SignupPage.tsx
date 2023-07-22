@@ -42,14 +42,12 @@ function RegistrationPage() {
       errors.email = 'email field can not be empty';
     }
     if (password !== confirm_pass) {
-      console.log('hey password dont match');
       errors['confirm password'] = "passwords don't match";
     }
 
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
     try {
-      console.log(username);
 
       const res = await api.post<
         AuthFormType,
@@ -59,7 +57,7 @@ function RegistrationPage() {
         email,
         password,
       });
-      console.log('if it works', username);
+
       if (res.ok) {
         flashMessage && flashMessage('Registration successfull!', 'green');
 
@@ -70,7 +68,6 @@ function RegistrationPage() {
         setFormErrors({});
       } else {
         if (res.body?.errors) {
-          console.log(res.body?.errors);
           setFormErrors(res.body?.errors);
         }
       }

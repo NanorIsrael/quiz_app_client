@@ -75,7 +75,6 @@ export default class Client {
     if (response.status >= 500 && this.onError) {
       this.onError(response);
     }
-    console.log(response.body);
     return response;
   }
 
