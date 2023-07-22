@@ -60,17 +60,22 @@ export default class Client {
 
   async request<T, R>(options: OptionsType<T>) {
     const response = await this.requestInternal<T, R>(options);
-    if (response.status === 401 && options.url !== '/tokens') {
-      const res = await this.put<LoginResponse, LoginResponse>('/tokens', {
-        access_token: localStorage.getItem('accessToken') as string,
-      });
+
+    if (response.status === 401 && options.url !== '/users/tokens') {
+      const res = await this.put<LoginResponse, LoginResponse>(
+        '/users/tokens',
+        {
+          accessToken: localStorage.getItem('accessToken') as string,
+        },
+      );
       if (res.ok) {
-        localStorage.setItem('accessToken', res.body?.access_token as string);
+        localStorage.setItem('accessToken', res.body?.accessToken as string);
       }
     }
     if (response.status >= 500 && this.onError) {
       this.onError(response);
     }
+    console.log(response.body);
     return response;
   }
 
@@ -86,20 +91,24 @@ export default class Client {
       query = '?' + query;
     }
     try {
-      // const accessToken =  localStorage.getItem("accessToken")
-      //   if (!accessToken && options.url !== "/tokens") {
-      //     throw new Error("Access token not found");
-      //   }
+      const accessToken = localStorage.getItem('accessToken');
+      if (
+        !accessToken &&
+        options.url !== '/users/tokens' &&
+        options.url !== '/users/token'
+      ) {
+        throw new Error('Access token not found');
+      }
 
       response = await fetch(this.base_url + options.url + query, {
         method: options.method,
         headers: {
           'Content-Type': 'application/json',
-          // "Authorization": "Bearer " + String(accessToken),
+          Authorization: 'Bearer ' + String(accessToken),
           ...options.headers,
         },
         body: options.body ? JSON.stringify(options.body) : null,
-        credentials: options.url === '/tokens' ? 'include' : 'omit',
+        credentials: 'include',
       });
     } catch (error) {
       response = {
@@ -139,7 +148,7 @@ export default class Client {
     body: T,
     options?: HTTPTOptions,
   ): Promise<RequestResponse<R>> {
-    return this.request({ method: 'POST', url, body, ...options });
+    return await this.request({ method: 'POST', url, body, ...options });
   }
   async put<T, R>(
     url: string,
@@ -155,24 +164,28 @@ export default class Client {
     return this.request({ method: 'DELETE', url, ...options });
   }
 
-  async login(username: string, password: string) {
-    const response = await this.post<null, LoginResponse>('/tokens', null, {
-      headers: {
-        Authorization: 'Basic ' + btoa(username + ':' + password),
+  async login(email: string, password: string) {
+    const response = await this.post<null, LoginResponse>(
+      '/users/token',
+      null,
+      {
+        headers: {
+          Authorization: 'Basic ' + btoa(email + ':' + password),
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       return response.status === 401 ? 'fail' : 'error';
     }
-    if (response.body?.access_token) {
-      localStorage.setItem('accessToken', response.body?.access_token);
+    if (response.body?.accessToken) {
+      localStorage.setItem('accessToken', response.body?.accessToken);
     }
     return 'ok';
   }
 
   async logout() {
-    await this.delete('/tokens');
+    await this.delete('/users/tokens');
     localStorage.removeItem('accessToken');
   }
 
@@ -182,5 +195,5 @@ export default class Client {
 }
 
 interface LoginResponse {
-  access_token: string;
+  accessToken: string;
 }

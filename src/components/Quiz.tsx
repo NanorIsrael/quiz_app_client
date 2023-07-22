@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApi } from '../data/ApiProvider';
 import CheckboxGroup from './CheckboxGroup';
 
@@ -15,20 +16,24 @@ export interface ResponseType {
   };
 }
 export interface QuizResponseType extends ResponseType {
-  quizQuestion: QuizType
+  quizQuestion: QuizType;
   cusor: {
-    hasNext: boolean,
-    currentIndex: number,
-    totalNumber: number
-    }
+    hasNext: boolean;
+    currentIndex: number;
+    totalNumber: number;
+  };
 }
 
-export default function Quiz() {
-  const [questionIndex, setQuestionIndex] = useState<number | null>(1);
+export default function Quiz({
+  setScore,
+}: {
+  setScore: (score: number) => void;
+}) {
+  const [questionIndex, setQuestionIndex] = useState<number>(1);
   const [cursor, setCursor] = useState({
-        hasNext: false,
-        currentIndex: 1,
-        totalNumber: 0
+    hasNext: false,
+    currentIndex: 1,
+    totalNumber: 0,
   });
   const [selectedOption, setSelectedOption] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState(
@@ -38,6 +43,7 @@ export default function Quiz() {
     error: '',
   });
   const api = useApi();
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -49,30 +55,56 @@ export default function Quiz() {
         setCursor(response.body?.cusor);
       } else {
         setCurrentQuestion(null);
-        // setQuestionIndex(null)
       }
       if (response.body?.errors) {
         setError(response.body?.errors);
+      }
+      if (questionIndex === 1) {
+        localStorage.setItem('answeredQuestions', '[]');
       }
     })();
   }, [api, questionIndex]);
 
   const handleOptionChange = (option: string) => {
-      console.log(cursor.hasNext)
-    
-        setSelectedOption(option);
-      
+    console.log(cursor.hasNext);
+    setSelectedOption(option);
   };
 
-    const handleCurrentQuestion = () => {
-        if (cursor.hasNext) {
-            setQuestionIndex((prev) => prev ? prev + 1 : null);
-            setSelectedOption('');
+  const handleCurrentQuestion = async () => {
+    if (currentQuestion) {
+      const quizQuestions: AnsweredQuestions[] =
+        (JSON.parse(
+          localStorage.getItem('answeredQuestions')!,
+        ) as AnsweredQuestions[]) || [];
 
-        } else {
-            setSelectedOption('');
+      quizQuestions.push({
+        ...currentQuestion,
+        selectedAnswer: selectedOption,
+        questionNumber: questionIndex,
+      });
+
+      localStorage.setItem('answeredQuestions', JSON.stringify(quizQuestions));
+      setQuestionIndex((prev) => prev + 1);
+      setSelectedOption('');
+
+      if (!cursor.hasNext) {
+        console.log('quizQuestions', quizQuestions);
+
+        const response = await api.post<QuizBody, any>('/quiz', {
+          quizQuestions,
+          status: 1,
+        });
+
+        if (response.ok) {
+          setSelectedOption('');
+          localStorage.setItem('answeredQuestions', '[]');
+          console.log('heoo form', response.body.score);
+          setScore(response.body.score as number);
+          navigate('/user/score');
         }
-    };
+      }
+    }
+  };
 
   return (
     <div className="App">
@@ -85,7 +117,7 @@ export default function Quiz() {
         ) : (
           <>
             {currentQuestion && (
-              <section>
+              <section className="m-2">
                 <p>
                   <span>{'' + currentQuestion.question_number}.</span> &nbsp;
                   {currentQuestion.question}
@@ -98,13 +130,27 @@ export default function Quiz() {
               </section>
             )}
             <button
-             onClick={handleCurrentQuestion}
-             disabled={selectedOption === ''}>
-            {cursor.hasNext ? 'Next' : 'Done'}
+              onClick={handleCurrentQuestion}
+              disabled={selectedOption === ''}
+              className={
+                'bg-black p-2 w-4/12 text-white m-4 hover:text-yellow-600'
+              }
+            >
+              {cursor.hasNext ? 'Next' : 'Done'}
             </button>
           </>
         )}
       </main>
     </div>
   );
+}
+
+interface AnsweredQuestions extends QuizType {
+  selectedAnswer: string;
+  questionNumber: number;
+}
+
+interface QuizBody {
+  quizQuestions: AnsweredQuestions[];
+  status: number;
 }

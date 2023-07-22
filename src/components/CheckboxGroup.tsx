@@ -11,16 +11,16 @@ const CheckboxGroup = ({
   return (
     <div>
       {options.map((option) => (
-        <div key={option}>
-            <label>
+        <div key={option} className={'check_box m-4'}>
+          <label>
             <input
-                type="checkbox"
-                value={option}
-                checked={selectedOption === option}
-                onChange={() => onOptionChange(option)}
+              type="checkbox"
+              value={option}
+              checked={selectedOption === option}
+              onChange={() => onOptionChange(option)}
             />
             {option}
-            </label>
+          </label>
         </div>
       ))}
     </div>
